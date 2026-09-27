@@ -1,0 +1,293 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "TSD8 ARPETTE - G1 D\u00c9PART",
+        "subtitle": "1 937 m \u00b7 Plagne Bellec\u00f4te",
+        "type": "station_label",
+        "station": "G1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.6990915,
+          45.5125458
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "TSD8 ARPETTE - G2 ARRIV\u00c9E",
+        "subtitle": "2 348 m \u00b7 Col de l'Arpette",
+        "type": "station_label",
+        "station": "G2"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7166279,
+          45.522557
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P1",
+        "subtitle": "H: 12.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.699287,
+          45.5126642
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P2",
+        "subtitle": "H: 13.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P2"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.6996844,
+          45.5128909
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P3",
+        "subtitle": "H: 16.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P3"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7007235,
+          45.5134836
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P4",
+        "subtitle": "H: 17.5m",
+        "type": "pylon_label",
+        "pylon_ref": "P4"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7020466,
+          45.5142383
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P5",
+        "subtitle": "H: 16.5m",
+        "type": "pylon_label",
+        "pylon_ref": "P5"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7028296,
+          45.514685
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P6",
+        "subtitle": "H: 16.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P6"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7032931,
+          45.5149493
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P7",
+        "subtitle": "H: 16.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P7"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7045917,
+          45.5156901
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P8",
+        "subtitle": "H: 17.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P8"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7057307,
+          45.5163397
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P9",
+        "subtitle": "H: 17.5m",
+        "type": "pylon_label",
+        "pylon_ref": "P9"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7063479,
+          45.5166917
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P10",
+        "subtitle": "H: 18.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P10"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.708247,
+          45.5177749
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P11",
+        "subtitle": "H: 19.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P11"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7096167,
+          45.5185561
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P12",
+        "subtitle": "H: 18.5m",
+        "type": "pylon_label",
+        "pylon_ref": "P12"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7112044,
+          45.5194617
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P13",
+        "subtitle": "H: 17.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P13"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7119676,
+          45.519897
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P14",
+        "subtitle": "H: 16.5m",
+        "type": "pylon_label",
+        "pylon_ref": "P14"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7134255,
+          45.5207285
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P15",
+        "subtitle": "H: 15.0m",
+        "type": "pylon_label",
+        "pylon_ref": "P15"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7143738,
+          45.5212693
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "title": "P16",
+        "subtitle": "H: 12.5m",
+        "type": "pylon_label",
+        "pylon_ref": "P16"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          6.7162082,
+          45.5223155
+        ]
+      }
+    }
+  ]
+}

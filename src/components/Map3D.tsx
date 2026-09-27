@@ -202,10 +202,25 @@ export default function Map3D() {
               },
             },
           },
-          // Bâtiments 3D de tous les 11 villages de La Plagne (2 656 chalets et résidences)
+          // Bâtiments 3D de tous les 11 villages de La Plagne (2 654 chalets et résidences)
           'all-villages-buildings': {
             type: 'geojson',
             data: '/data/all_villages_buildings.json',
+          },
+          // Structures 3D du Télésiège Débrayable Arpette (Gares G1 & G2, 16 Pylônes, Potences et Balanciers)
+          'arpette-3d-structures': {
+            type: 'geojson',
+            data: '/data/arpette_3d_structures.json',
+          },
+          // Câbles tendus du TSD8 Arpette
+          'arpette-cables': {
+            type: 'geojson',
+            data: '/data/arpette_cables.json',
+          },
+          // Balisage et étiquettes du TSD8 Arpette
+          'arpette-labels': {
+            type: 'geojson',
+            data: '/data/arpette_labels.json',
           },
           // Repères discrets des 11 villages et sommets
           'plagne-villages-summits': {
@@ -252,7 +267,7 @@ export default function Map3D() {
               'hillshade-exaggeration': 0.32,
             },
           },
-          // 4. Bâtiments 3D extrudés de TOUS les villages (2 656 bâtiments réels)
+          // 4. Bâtiments 3D extrudés de TOUS les villages (2 654 chalets et résidences)
           {
             id: 'all-villages-buildings-3d',
             type: 'fill-extrusion',
@@ -262,6 +277,40 @@ export default function Map3D() {
               'fill-extrusion-base': ['get', 'base_height'],
               'fill-extrusion-color': ['get', 'color'],
               'fill-extrusion-opacity': 0.95,
+            },
+          },
+          // Câbles du Télésiège TSD8 Arpette (Voie Montée & Descente)
+          {
+            id: 'arpette-cables-shadow',
+            type: 'line',
+            source: 'arpette-cables',
+            paint: {
+              'line-color': '#0f172a',
+              'line-width': 3,
+              'line-opacity': 0.15,
+              'line-blur': 1.5,
+            },
+          },
+          {
+            id: 'arpette-cables-line',
+            type: 'line',
+            source: 'arpette-cables',
+            paint: {
+              'line-color': '#0f172a',
+              'line-width': 1.8,
+              'line-opacity': 0.85,
+            },
+          },
+          // Structures 3D réelles du TSD8 Arpette (Gares G1 & G2, 16 Pylônes métalliques, potences et balanciers)
+          {
+            id: 'arpette-structures-3d',
+            type: 'fill-extrusion',
+            source: 'arpette-3d-structures',
+            paint: {
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['coalesce', ['get', 'min_height'], 0],
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-opacity': 0.98,
             },
           },
           // 5. Dégradé radial doux qui estompe progressivement les bordures
@@ -324,6 +373,47 @@ export default function Map3D() {
               'text-halo-width': 3,
             },
           },
+          // 9. Numérotation des 16 pylônes (P1 à P16) du télésiège Arpette au zoom rapproché
+          {
+            id: 'arpette-pylons-labels',
+            type: 'symbol',
+            source: 'arpette-labels',
+            filter: ['==', ['get', 'type'], 'pylon_label'],
+            minzoom: 14.0,
+            layout: {
+              'text-field': ['get', 'title'],
+              'text-size': 9.5,
+              'text-font': ['Open Sans Bold', 'Open Sans Regular'],
+              'text-offset': [0, -1.2],
+              'text-anchor': 'bottom',
+              'text-allow-overlap': true,
+            },
+            paint: {
+              'text-color': '#1e293b',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 2.5,
+            },
+          },
+          // 10. Gares de départ et d'arrivée du TSD8 Arpette
+          {
+            id: 'arpette-stations-labels',
+            type: 'symbol',
+            source: 'arpette-labels',
+            filter: ['==', ['get', 'type'], 'station_label'],
+            layout: {
+              'text-field': ['concat', ['get', 'title'], '\n', ['get', 'subtitle']],
+              'text-size': 11,
+              'text-font': ['Open Sans Bold', 'Open Sans Regular'],
+              'text-offset': [0, -1.8],
+              'text-anchor': 'bottom',
+              'text-allow-overlap': true,
+            },
+            paint: {
+              'text-color': '#0f172a',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 3,
+            },
+          },
         ],
         sky: {
           'sky-color': '#ffffff',
@@ -361,6 +451,67 @@ export default function Map3D() {
         color: '#ffffff',
         intensity: 0.45,
         position: [1.2, 315, 55],
+      });
+
+      // Interaction au clic et au survol sur les structures et gares du télésiège Arpette
+      const interactiveLayers = ['arpette-structures-3d', 'arpette-stations-labels', 'arpette-pylons-labels'];
+
+      interactiveLayers.forEach((layerId) => {
+        mapInstance.on('mouseenter', layerId, () => {
+          mapInstance.getCanvas().style.cursor = 'pointer';
+        });
+        mapInstance.on('mouseleave', layerId, () => {
+          mapInstance.getCanvas().style.cursor = '';
+        });
+        mapInstance.on('click', layerId, (e) => {
+          if (!e.features || !e.features[0]) return;
+          const feat = e.features[0];
+          const props = feat.properties || {};
+
+          let title = props.name || props.title || 'TSD8 Arpette';
+          let details = '';
+
+          if (props.type === 'station' || props.type === 'station_label') {
+            const isG1 =
+              (props.id && String(props.id).includes('g1')) ||
+              props.station === 'G1' ||
+              title.includes('Départ') ||
+              title.includes('Bellecôte') ||
+              title.includes('Aval');
+            title = isG1 ? 'TSD8 Arpette — Gare Aval' : 'TSD8 Arpette — Gare Amont';
+            details = isG1
+              ? '<div style="color: #475569; font-size: 11px; line-height: 1.4; margin-top: 4px;">' +
+                '<strong style="color: #0f172a; font-size: 12px;">Plagne Bellecôte (1 937 m)</strong><br/>' +
+                'Télésiège Débrayable 8 places Leitner (2005)<br/>' +
+                'Débit : 4 400 skieurs / h · Vitesse : 5,5 m/s<br/>' +
+                'Longueur : 1 838 m · Dénivelé : 411 m' +
+                '</div>'
+              : '<div style="color: #475569; font-size: 11px; line-height: 1.4; margin-top: 4px;">' +
+                '<strong style="color: #0f172a; font-size: 12px;">Col de l\'Arpette (2 348 m)</strong><br/>' +
+                'Gare motrice amont · 2× 550 kW (1 100 kW)<br/>' +
+                'Liaison Montchavin - Les Coches & Paradiski' +
+                '</div>';
+          } else if (props.pylon_ref || (props.title && String(props.title).startsWith('P'))) {
+            const pref = props.pylon_ref || props.title;
+            const h = props.height ? `${props.height} m` : (props.subtitle ? props.subtitle.replace('H: ', '') : '16 m');
+            title = `Pylône ${pref} — TSD8 Arpette`;
+            details =
+              '<div style="color: #475569; font-size: 11px; line-height: 1.4; margin-top: 4px;">' +
+              `Hauteur : <strong style="color: #0f172a;">${h}</strong><br/>` +
+              'Ligne Bellecôte ➔ Col de l\'Arpette (16 pylônes)' +
+              '</div>';
+          }
+
+          new maplibregl.Popup({ closeButton: true, closeOnClick: true, offset: 15, maxWidth: '280px' })
+            .setLngLat(e.lngLat)
+            .setHTML(`
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 2px;">
+                <div style="font-weight: 700; color: #0f172a; font-size: 13px;">${title}</div>
+                ${details}
+              </div>
+            `)
+            .addTo(mapInstance);
+        });
       });
     });
 

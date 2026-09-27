@@ -26,3 +26,31 @@ body {
 body {
   overscroll-behavior: none;
 }
+
+/* Style épuré et moderne des popups MapLibre */
+.maplibregl-popup-content {
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+.maplibregl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.maplibregl-popup-close-button {
+  padding: 4px 8px;
+  color: #64748b;
+  font-size: 16px;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: #0f172a;
+  background: transparent;
+}
