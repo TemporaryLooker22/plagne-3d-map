@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import maplibregl, { Map as MapLibreMap } from 'maplibre-gl';
+import belleplagneBuildings from '@/data/belleplagne_buildings.json';
+import belleplagnePaths from '@/data/belleplagne_paths.json';
 
 // Emprise géographique élargie pour un fondu progressif de La Plagne
 const FADE_BBOX = {
@@ -47,7 +49,7 @@ const PLAGNE_SUMMITS = {
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [6.7081, 45.5113] },
-      properties: { name: 'Belle Plagne', elevation: '2 050 m' },
+      properties: { name: 'Village Belle Plagne', elevation: '2 050 m' },
     },
     {
       type: 'Feature',
@@ -97,7 +99,6 @@ export default function Map3D() {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
     // Sur mobile, pixelRatio plafonné à 1.5 pour une fluidité parfaite à 60 FPS
-    // Sur desktop, jusqu'à 2.0 pour la netteté Retina
     const optimizedPixelRatio = Math.min(
       typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1,
       isMobile ? 1.5 : 2
@@ -115,7 +116,7 @@ export default function Map3D() {
       fadeDuration: 0,
       renderWorldCopies: false,
       maxTileCacheSize: isMobile ? 50 : 100,
-      touchPitch: true, // Glisser à 2 doigts vers le haut/bas pour incliner en 3D sur mobile
+      touchPitch: true, // Glisser à 2 doigts pour incliner en 3D sur mobile
       touchZoomRotate: true, // Pincer pour zoomer et pivoter à 2 doigts
       dragRotate: true,
       dragPan: true,
@@ -124,7 +125,7 @@ export default function Map3D() {
         version: 8,
         glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
-          // Source DEM haute définition
+          // Source DEM haute définition (maxzoom 14 pour un relief 3D détaillé)
           'terrain-dem': {
             type: 'raster-dem',
             tiles: [
@@ -165,6 +166,16 @@ export default function Map3D() {
                 ],
               },
             },
+          },
+          // Bâtiments 3D de Belle Plagne (142 résidences et chalets savoyards)
+          'belle-plagne-buildings': {
+            type: 'geojson',
+            data: belleplagneBuildings as GeoJSON.FeatureCollection,
+          },
+          // Chemins piétons et remontées mécaniques de Belle Plagne
+          'belle-plagne-paths': {
+            type: 'geojson',
+            data: belleplagnePaths as GeoJSON.FeatureCollection,
           },
           // Repères discrets des sommets
           'plagne-summits': {
@@ -211,7 +222,43 @@ export default function Map3D() {
               'hillshade-exaggeration': 0.32,
             },
           },
-          // 4. Dégradé radial doux qui estompe progressivement les bordures
+          // 4. Chemins piétons du village de Belle Plagne
+          {
+            id: 'belle-plagne-paths-layer',
+            type: 'line',
+            source: 'belle-plagne-paths',
+            filter: ['==', ['get', 'type'], 'path'],
+            paint: {
+              'line-color': '#cbd5e1',
+              'line-width': 1.5,
+              'line-opacity': 0.8,
+            },
+          },
+          // 5. Câbles des remontées mécaniques de Belle Plagne (télécabines / télésièges)
+          {
+            id: 'belle-plagne-lifts-layer',
+            type: 'line',
+            source: 'belle-plagne-paths',
+            filter: ['==', ['get', 'type'], 'lift'],
+            paint: {
+              'line-color': '#64748b',
+              'line-width': 1.5,
+              'line-dasharray': [3, 2],
+            },
+          },
+          // 6. Bâtiments 3D extrudés de Belle Plagne (142 chalets et résidences)
+          {
+            id: 'belle-plagne-buildings-3d',
+            type: 'fill-extrusion',
+            source: 'belle-plagne-buildings',
+            paint: {
+              'fill-extrusion-height': ['get', 'height'],
+              'fill-extrusion-base': ['get', 'base_height'],
+              'fill-extrusion-color': ['get', 'color'],
+              'fill-extrusion-opacity': 0.95,
+            },
+          },
+          // 7. Dégradé radial doux qui estompe progressivement les bordures
           {
             id: 'fade-mask-layer',
             type: 'raster',
@@ -221,7 +268,7 @@ export default function Map3D() {
               'raster-fade-duration': 0,
             },
           },
-          // 5. Masque blanc uni pour l'extérieur
+          // 8. Masque blanc uni pour l'extérieur
           {
             id: 'outside-mask',
             type: 'fill',
@@ -231,7 +278,28 @@ export default function Map3D() {
               'fill-opacity': 1.0,
             },
           },
-          // 6. Typographie des sommets (adaptée mobile / desktop)
+          // 9. Noms des résidences de Belle Plagne en zoom rapproché
+          {
+            id: 'belle-plagne-residence-labels',
+            type: 'symbol',
+            source: 'belle-plagne-buildings',
+            filter: ['!=', ['get', 'name'], ''],
+            minzoom: 14.5,
+            layout: {
+              'text-field': ['get', 'name'],
+              'text-size': 10,
+              'text-font': ['Open Sans Regular'],
+              'text-offset': [0, -1.2],
+              'text-anchor': 'bottom',
+              'text-max-width': 8,
+            },
+            paint: {
+              'text-color': '#0f172a',
+              'text-halo-color': '#ffffff',
+              'text-halo-width': 2.5,
+            },
+          },
+          // 10. Typographie des sommets (affichée au-dessus du relief)
           {
             id: 'summits-labels',
             type: 'symbol',
@@ -281,7 +349,7 @@ export default function Map3D() {
         exaggeration: 1.35,
       });
 
-      // Éclairage 3D WebGL
+      // Éclairage directionnel WebGL
       mapInstance.setLight({
         anchor: 'viewport',
         color: '#ffffff',
