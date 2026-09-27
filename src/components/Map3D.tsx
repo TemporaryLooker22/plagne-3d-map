@@ -2,10 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import maplibregl, { Map as MapLibreMap } from 'maplibre-gl';
-import belleplagneBuildings from '@/data/belleplagne_buildings.json';
-import belleplagnePaths from '@/data/belleplagne_paths.json';
 
-// Emprise géographique élargie pour un fondu progressif de La Plagne
+// Emprise géographique élargie couvrant les 11 villages et sommets du massif de La Plagne
 const FADE_BBOX = {
   minLng: 6.54,
   maxLng: 6.90,
@@ -22,39 +20,81 @@ const OUTSIDE_HOLE: [number, number][] = [
   [FADE_BBOX.minLng, FADE_BBOX.minLat],
 ];
 
-// Principaux sommets et repères de La Plagne
-const PLAGNE_SUMMITS = {
+// Les 11 stations & villages de La Plagne ainsi que les sommets majeurs
+const PLAGNE_VILLAGES_AND_SUMMITS = {
   type: 'FeatureCollection',
   features: [
+    // Sommets emblématiques
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [6.7808, 45.4947] },
-      properties: { name: '▲ Sommet de Bellecôte', elevation: '3 417 m' },
+      properties: { name: '▲ Sommet de Bellecôte', elevation: '3 417 m', kind: 'peak' },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [6.7328, 45.5002] },
-      properties: { name: '▲ Roche de Mio', elevation: '2 739 m' },
+      properties: { name: '▲ Roche de Mio', elevation: '2 739 m', kind: 'peak' },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [6.6872, 45.5054] },
-      properties: { name: '▲ Grande Rochette', elevation: '2 505 m' },
+      properties: { name: '▲ Grande Rochette', elevation: '2 505 m', kind: 'peak' },
     },
+    // Les 11 stations et villages
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [6.6745, 45.5064] },
-      properties: { name: 'Plagne Centre', elevation: '1 970 m' },
+      properties: { name: 'Plagne Centre', elevation: '1 970 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.6710, 45.5126] },
+      properties: { name: 'Plagne Aime 2000', elevation: '2 100 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.6948, 45.5108] },
+      properties: { name: 'Plagne Bellecôte', elevation: '1 930 m', kind: 'village' },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [6.7081, 45.5113] },
-      properties: { name: 'Village Belle Plagne', elevation: '2 050 m' },
+      properties: { name: 'Belle Plagne', elevation: '2 050 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.6620, 45.5115] },
+      properties: { name: 'Plagne 1800', elevation: '1 800 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.6830, 45.5060] },
+      properties: { name: 'Plagne Villages', elevation: '2 050 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.6840, 45.5090] },
+      properties: { name: 'Plagne Soleil', elevation: '2 050 m', kind: 'village' },
     },
     {
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [6.6922, 45.4542] },
-      properties: { name: 'Champagny-en-Vanoise', elevation: '1 250 m' },
+      properties: { name: 'Champagny-en-Vanoise', elevation: '1 250 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.6350, 45.5340] },
+      properties: { name: 'Plagne Montalbert', elevation: '1 350 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.7370, 45.5600] },
+      properties: { name: 'Montchavin', elevation: '1 250 m', kind: 'village' },
+    },
+    {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [6.7310, 45.5530] },
+      properties: { name: 'Les Coches', elevation: '1 450 m', kind: 'village' },
     },
   ],
 };
@@ -67,14 +107,12 @@ function generateRadialFadeMask(): string {
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
 
-  // Fond blanc pur
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, 1024, 1024);
 
-  // Découpe centrale progressive
   ctx.globalCompositeOperation = 'destination-out';
   const gradient = ctx.createRadialGradient(512, 512, 140, 512, 512, 490);
-  gradient.addColorStop(0.0, 'rgba(0, 0, 0, 1)');      // Cœur de La Plagne 100% visible
+  gradient.addColorStop(0.0, 'rgba(0, 0, 0, 1)');      // Cœur 100% visible
   gradient.addColorStop(0.42, 'rgba(0, 0, 0, 1)');
   gradient.addColorStop(0.58, 'rgba(0, 0, 0, 0.88)'); // Début de transition douce
   gradient.addColorStop(0.72, 'rgba(0, 0, 0, 0.58)');
@@ -95,16 +133,13 @@ export default function Map3D() {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    // Détection mobile pour cadrage et performances optimisées
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
-    // Sur mobile, pixelRatio plafonné à 1.5 pour une fluidité parfaite à 60 FPS
     const optimizedPixelRatio = Math.min(
       typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1,
       isMobile ? 1.5 : 2
     );
 
-    // Zoom initial adapté au format d'écran vertical sur smartphone
     const initialZoom = isMobile ? 11.6 : 12.4;
     const initialPitch = isMobile ? 60 : 66;
 
@@ -115,9 +150,9 @@ export default function Map3D() {
       pixelRatio: optimizedPixelRatio,
       fadeDuration: 0,
       renderWorldCopies: false,
-      maxTileCacheSize: isMobile ? 50 : 100,
-      touchPitch: true, // Glisser à 2 doigts pour incliner en 3D sur mobile
-      touchZoomRotate: true, // Pincer pour zoomer et pivoter à 2 doigts
+      maxTileCacheSize: isMobile ? 60 : 120,
+      touchPitch: true,
+      touchZoomRotate: true,
       dragRotate: true,
       dragPan: true,
       cooperativeGestures: false,
@@ -125,7 +160,7 @@ export default function Map3D() {
         version: 8,
         glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
-          // Source DEM haute définition (maxzoom 14 pour un relief 3D détaillé)
+          // Source DEM haute définition
           'terrain-dem': {
             type: 'raster-dem',
             tiles: [
@@ -167,20 +202,15 @@ export default function Map3D() {
               },
             },
           },
-          // Bâtiments 3D de Belle Plagne (142 résidences et chalets savoyards)
-          'belle-plagne-buildings': {
+          // Bâtiments 3D de tous les 11 villages de La Plagne (2 656 chalets et résidences)
+          'all-villages-buildings': {
             type: 'geojson',
-            data: belleplagneBuildings as GeoJSON.FeatureCollection,
+            data: '/data/all_villages_buildings.json',
           },
-          // Chemins piétons et remontées mécaniques de Belle Plagne
-          'belle-plagne-paths': {
+          // Repères discrets des 11 villages et sommets
+          'plagne-villages-summits': {
             type: 'geojson',
-            data: belleplagnePaths as GeoJSON.FeatureCollection,
-          },
-          // Repères discrets des sommets
-          'plagne-summits': {
-            type: 'geojson',
-            data: PLAGNE_SUMMITS as GeoJSON.FeatureCollection,
+            data: PLAGNE_VILLAGES_AND_SUMMITS as GeoJSON.FeatureCollection,
           },
         },
         layers: [
@@ -222,35 +252,11 @@ export default function Map3D() {
               'hillshade-exaggeration': 0.32,
             },
           },
-          // 4. Chemins piétons du village de Belle Plagne
+          // 4. Bâtiments 3D extrudés de TOUS les villages (2 656 bâtiments réels)
           {
-            id: 'belle-plagne-paths-layer',
-            type: 'line',
-            source: 'belle-plagne-paths',
-            filter: ['==', ['get', 'type'], 'path'],
-            paint: {
-              'line-color': '#cbd5e1',
-              'line-width': 1.5,
-              'line-opacity': 0.8,
-            },
-          },
-          // 5. Câbles des remontées mécaniques de Belle Plagne (télécabines / télésièges)
-          {
-            id: 'belle-plagne-lifts-layer',
-            type: 'line',
-            source: 'belle-plagne-paths',
-            filter: ['==', ['get', 'type'], 'lift'],
-            paint: {
-              'line-color': '#64748b',
-              'line-width': 1.5,
-              'line-dasharray': [3, 2],
-            },
-          },
-          // 6. Bâtiments 3D extrudés de Belle Plagne (142 chalets et résidences)
-          {
-            id: 'belle-plagne-buildings-3d',
+            id: 'all-villages-buildings-3d',
             type: 'fill-extrusion',
-            source: 'belle-plagne-buildings',
+            source: 'all-villages-buildings',
             paint: {
               'fill-extrusion-height': ['get', 'height'],
               'fill-extrusion-base': ['get', 'base_height'],
@@ -258,7 +264,7 @@ export default function Map3D() {
               'fill-extrusion-opacity': 0.95,
             },
           },
-          // 7. Dégradé radial doux qui estompe progressivement les bordures
+          // 5. Dégradé radial doux qui estompe progressivement les bordures
           {
             id: 'fade-mask-layer',
             type: 'raster',
@@ -268,7 +274,7 @@ export default function Map3D() {
               'raster-fade-duration': 0,
             },
           },
-          // 8. Masque blanc uni pour l'extérieur
+          // 6. Masque blanc uni pour l'extérieur
           {
             id: 'outside-mask',
             type: 'fill',
@@ -278,16 +284,16 @@ export default function Map3D() {
               'fill-opacity': 1.0,
             },
           },
-          // 9. Noms des résidences de Belle Plagne en zoom rapproché
+          // 7. Noms des résidences et chalets notables au zoom rapproché
           {
-            id: 'belle-plagne-residence-labels',
+            id: 'village-building-labels',
             type: 'symbol',
-            source: 'belle-plagne-buildings',
+            source: 'all-villages-buildings',
             filter: ['!=', ['get', 'name'], ''],
-            minzoom: 14.5,
+            minzoom: 14.8,
             layout: {
               'text-field': ['get', 'name'],
-              'text-size': 10,
+              'text-size': 9.5,
               'text-font': ['Open Sans Regular'],
               'text-offset': [0, -1.2],
               'text-anchor': 'bottom',
@@ -299,18 +305,18 @@ export default function Map3D() {
               'text-halo-width': 2.5,
             },
           },
-          // 10. Typographie des sommets (affichée au-dessus du relief)
+          // 8. Typographie des 11 stations/villages et sommets
           {
-            id: 'summits-labels',
+            id: 'villages-summits-labels',
             type: 'symbol',
-            source: 'plagne-summits',
+            source: 'plagne-villages-summits',
             layout: {
               'text-field': ['concat', ['get', 'name'], ' (', ['get', 'elevation'], ')'],
               'text-size': isMobile ? 10 : 11.5,
               'text-font': ['Open Sans Bold', 'Open Sans Regular'],
               'text-offset': [0, -1],
               'text-anchor': 'bottom',
-              'text-allow-overlap': true,
+              'text-allow-overlap': false,
             },
             paint: {
               'text-color': '#0f172a',
@@ -326,10 +332,10 @@ export default function Map3D() {
           'sky-horizon-blend': 1.0,
         },
       },
-      center: [6.72, 45.50],
+      center: [6.70, 45.505],
       zoom: initialZoom,
       pitch: initialPitch,
-      bearing: -32,
+      bearing: -30,
       maxPitch: 85,
       maxBounds: [
         [6.54, 45.37],
@@ -343,7 +349,7 @@ export default function Map3D() {
     });
 
     mapInstance.on('load', () => {
-      // Activation du relief 3D
+      // Activation du relief 3D haute précision
       mapInstance.setTerrain({
         source: 'terrain-dem',
         exaggeration: 1.35,
