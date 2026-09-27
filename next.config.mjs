@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false, // Prevents double WebGL context initialization in development
+  output: 'export',
+  reactStrictMode: false,
 };
 
 export default nextConfig;
